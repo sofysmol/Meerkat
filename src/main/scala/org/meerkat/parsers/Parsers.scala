@@ -161,8 +161,8 @@ object Parsers { import AbstractCPSParsers._
     def ~ [U](p: Symbol[U])(implicit tuple: V|~|U, layout: Layout) = this ~~ layout.get ~~ p
     def ~~ [U](p: Symbol[U])(implicit tuple: V|~|U) = seq(this, p)
   
-//    def ~ (p: String)(implicit layout: Layout) = (this ~~ layout.get).~~(p)
-//    def ~~ (p: String)(implicit tuple: this.Value|~|NoValue) = { implicit val o = obj1(tuple); seq(this, p) }
+    //def ~ (p: String)(implicit layout: Layout) = (this ~~ layout.get).~~(p)
+    //def ~~ (p: String)(implicit tuple: this.Value|~|NoValue) = { implicit val o = obj1(tuple); seq(this, p) }
     
     def & [U](f: V => U) = new SequenceBuilderWithAction[U] {
       def apply(slot: Slot) = SequenceBuilder.this(slot)
@@ -277,7 +277,7 @@ object Parsers { import AbstractCPSParsers._
   
   implicit def toTerminal(r: org.meerkat.util.RegularExpression) = new Terminal {
     def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = { 
-      val end = r.matcher.next(input, i)
+      val end = -1//r.matcher.next(input, i)
       if(end != -1) CPSResult.success(sppfLookup.getTerminalNode(r.toString, i, end))
       else CPSResult.failure 
     }

@@ -29,31 +29,36 @@ package org.meerkat.parsers.examples
 
 import org.meerkat.Syntax._
 import org.meerkat.parsers._
+import org.meerkat.util.InputGraph
 import Parsers._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
+import scalax.collection.Graph
+import scalax.collection.GraphPredef._, scalax.collection.GraphEdge._
+import scalax.collection.edge.LDiEdge
+
 
 @RunWith(classOf[JUnitRunner])
-class Example1 extends FunSuite {
-  
+class ExampleGraph extends FunSuite {
+  implicit val LAYOUT = layout { "".r }
   val A = syn { "a" ^ toStr }
   val B = syn { "b" ^ toStr }
   
   val AB: SequenceBuilder[String~String] = A ~~ B
     
   val S = 
-  syn ( A ~~ B
-      | "c"  ^ { toStr } 
+  syn ( A ~~ B 
+      | "c"    ^ { toStr }
       )
       
   
   test("test") {
-
-    val result = exec(S, "ab")
+    val g = Graph(LDiEdge(0,1)('a'), LDiEdge(1,2)('b'))
+    val result = exec(S, new InputGraph(g))
         
     assert(result.isSuccess)
-    //assert(result.asSuccess == "a++b")
+
   }
   
 }

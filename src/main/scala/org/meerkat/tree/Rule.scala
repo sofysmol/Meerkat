@@ -31,12 +31,15 @@ trait Rule {
   def head: NonterminalSymbol
   def body: Symbol
   var action: Option[Any => Any] = None 
+  //mycode
+  override def toString = s"${head.name} -> ${body.name}"
+  //mycode
 }
 
 object Rule {
   def apply(head: NonterminalSymbol, body: Symbol) = DefaultRule(head, body)
   def apply(head: NonterminalSymbol, body: Seq[Symbol]) = DefaultRule(head, Sequence(body:_*))
-  def unapply(r: Rule) = Some((r.head, r.body))
+  def unapply(r: Rule) = Some((r.head, r.body))  
 }
 
 case class DefaultRule(head: NonterminalSymbol, body: Symbol) extends Rule
@@ -55,10 +58,16 @@ object PartialRule {
 
 trait Symbol {
   def name: String
+  //mycode
+  override def toString = s"${name}"
+  //mycode
 }
 
 case class Layout(name: String) extends NonterminalSymbol {
   override def isRegular = false
+  //mycode
+  override def toString = "~"
+  //mycode
 }
 
 case class TerminalSymbol(name: String) extends Symbol

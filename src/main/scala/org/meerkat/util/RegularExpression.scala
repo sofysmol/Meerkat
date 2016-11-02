@@ -57,7 +57,7 @@ trait RegularExpression {
       case Plus(r)           => r.toString() + "+"
    }
    
-  def matcher: Matcher = new JavaRegexMatcher(toString)
+  //def matcher: Matcher = new JavaRegexMatcher(toString)
   
   def escape(c: scala.Char): String = c match {
     case '*' => "\\*"
@@ -111,7 +111,7 @@ trait Matcher {
   def matches(input:Input): Boolean = matches(input, 0, input.length)
 }
 
-class JavaRegexMatcher(s: String) extends Matcher {
+/*class JavaRegexMatcher(s: String) extends Matcher {
   
   val matcher: java.util.regex.Matcher = s.r.pattern.matcher("")
   
@@ -129,7 +129,7 @@ class JavaRegexMatcher(s: String) extends Matcher {
     matcher.matches()
   }
   
-}
+}*/
 
 object RegularExpression {
   
