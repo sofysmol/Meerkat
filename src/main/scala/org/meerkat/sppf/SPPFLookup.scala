@@ -66,9 +66,37 @@ class DefaultSPPFLookup(input: Input) extends SPPFLookup {
   var countPackedNodes: Int = 0
   var countTerminalNodes: Int = 0
   var countAmbiguousNodes: Int = 0
-  
-  def getStartNode(name: Any, leftExtent: Int, rightExtent: Int): Option[NonPackedNode] =
-    nonterminalNodes.get(IntKey3(name.hashCode(), leftExtent, rightExtent, hash))
+
+  override def getStartNode(name: Any, leftExtent: Int, rightExtent: Int): Option[NonPackedNode] = {
+    for(i <- 0 to rightExtent) {
+      nonterminalNodes.get(IntKey3(name.hashCode(), leftExtent, rightExtent, hash)) match {
+        case None => {}
+        case Some(root) => {return Some(root)}
+      }
+
+    }
+    return None
+  }
+  def getStartNodes(name: Any, leftExtent: Int, rightExtent: Int): Option[List[NonPackedNode]] = {
+    def getListOfNode(name: Any, leftExtent: Int, rightExtent: Int): List[NonPackedNode] = {
+      if (leftExtent >= rightExtent){
+        nonterminalNodes.get(IntKey3(name.hashCode(), leftExtent, rightExtent, hash)) match {
+          case None => Nil
+          case Some(root) => root :: Nil
+        }
+      }
+      else {
+        nonterminalNodes.get(IntKey3(name.hashCode(), leftExtent, rightExtent, hash)) match {
+          case None => getListOfNode(name, leftExtent, rightExtent - 1)
+          case Some(root) => root :: getListOfNode(name, leftExtent, rightExtent - 1)
+        }
+      }
+    }
+    getListOfNode(name,leftExtent,rightExtent) match {
+      case Nil => None
+      case roots=> Some(roots)
+    }
+  }
 
   def getTerminalNode(s: String, inputIndex: Int): TerminalNode = findOrElseCreateTerminalNode(s, inputIndex, inputIndex + 1)
   

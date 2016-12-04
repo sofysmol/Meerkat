@@ -117,14 +117,14 @@ trait Matcher {
   
   override def next(input: Input, i: Int): Int = {
     if (i < 0) return -1
-    matcher.reset(input.s)
+    //matcher.reset(input.s)
     matcher.region(i, input.length)
     if (matcher.lookingAt()) matcher.end 
     else -1
   }
   
   override def matches(input:Input, i: Int, j: Int): Boolean = {
-    matcher.reset(input.s)
+    //matcher.reset(input.s)
     matcher.region(i, j)
     matcher.matches()
   }

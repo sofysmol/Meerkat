@@ -40,20 +40,19 @@ class Example1 extends FunSuite {
   val A = syn { "a" ^ toStr }
   val B = syn { "b" ^ toStr }
   
-  val AB: SequenceBuilder[String~String] = A ~~ B
+  val AB: SequenceBuilder[String~String] = A ~ B
     
   val S = 
-  syn ( A ~~ B
-      | "c"  ^ { toStr } 
+  syn ( A ~ B  & { case x~y => s"$x++$y" } 
+      | "c"    ^ { toStr } 
       )
       
   
   test("test") {
-
-    val result = exec(S, "ab")
+    val result = exec(S, "a b")
         
     assert(result.isSuccess)
-    //assert(result.asSuccess == "a++b")
+    assert(result.asSuccess == "a++b")
   }
   
 }

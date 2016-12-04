@@ -36,19 +36,19 @@ import org.scalatest.FunSuite
 
 @RunWith(classOf[JUnitRunner])
 class Example4 extends FunSuite {
-  
+
   implicit val LAYOUT = layout { "_".r }
-  
-  val E: Nonterminal & Int 
-      = syn ( E ~ "+" ~ E & { case x~y => x + y }
-            | E ~ "*" ~ E & { case x~y => x * y }
-            | Num         ^ toInt )
-  
+
+  val E: Nonterminal & Int
+  = syn ( E ~ "+" ~ E & { case x~y => x + y }
+    | E ~ "*" ~ E & { case x~y => x * y }
+    | Num         ^ toInt )
+
   val Num = syn { "[0-9]".r }
-  
+
   test("test") {
     val result = parse(E, "5_*_3")
     assert(result.isSuccess)
   }
-  
+
 }

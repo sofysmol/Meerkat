@@ -30,7 +30,7 @@ package org.meerkat.tree
 trait Rule {
   def head: NonterminalSymbol
   def body: Symbol
-  var action: Option[Any => Any] = None 
+  var action: Option[Any => Any] = None
   //mycode
   override def toString = s"${head.name} -> ${body.name}"
   //mycode
@@ -39,7 +39,7 @@ trait Rule {
 object Rule {
   def apply(head: NonterminalSymbol, body: Symbol) = DefaultRule(head, body)
   def apply(head: NonterminalSymbol, body: Seq[Symbol]) = DefaultRule(head, Sequence(body:_*))
-  def unapply(r: Rule) = Some((r.head, r.body))  
+  def unapply(r: Rule) = Some((r.head, r.body))
 }
 
 case class DefaultRule(head: NonterminalSymbol, body: Symbol) extends Rule

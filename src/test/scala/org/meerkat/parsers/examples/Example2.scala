@@ -41,7 +41,7 @@ import org.scalatest.FunSuite
 @RunWith(classOf[JUnitRunner])
 class Example2 extends FunSuite { 
   
-  val A = syn { "a" ^ toStr }
+  /*val A = syn { "a" ^ toStr }
   val B = syn { "b" ^ toStr }
 
   
@@ -113,6 +113,6 @@ class Example2 extends FunSuite {
   test("test9") {
     val result = parse(Q, "cd")
     assert(result.isSuccess)
-  }
+  }*/
   
 }

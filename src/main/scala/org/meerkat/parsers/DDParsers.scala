@@ -168,7 +168,7 @@ object DDParsers { import AbstractCPSParsers._
   implicit def obj8[A,B,Val] = new CanMap[(NonPackedNode,A),(NonPackedNode,B),Val] {
     implicit val m = obj4[A]
     type Nonterminal = DDParsers.AbstractNonterminal[B,Val]
-    def nonterminal(name: String, p: AbstractParser[(NonPackedNode,B)]) = obj5[B,Val].nonterminal(name, p)
+    def nonterminal(name: String, p: AbstractParser[(NonPackedNode,B)]): Nonterminal = obj5[B,Val].nonterminal(name, p)
     
     def index(a: (NonPackedNode,A)) = a._1.rightExtent
     def intermediate(a: (NonPackedNode,A), b: (NonPackedNode,B), p: Slot, sppfLookup: SPPFLookup) = (sppfLookup.getIntermediateNode(p, a._1, b._1), b._2)
