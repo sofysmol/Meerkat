@@ -4,6 +4,7 @@ import org.meerkat.Syntax._
 import org.meerkat.parsers.Parsers._
 import org.meerkat.parsers._
 import org.meerkat.parsers.examples._
+import org.meerkat.util.IGraph
 
 import scalax.collection.Graph
 import scalax.collection.edge.Implicits._
@@ -18,12 +19,13 @@ object ExampleGraph2 {
 
   val AB: SequenceBuilder[String~String] = A ~~ B
   val S = syn ( A ~~ B  )
-  val g = Graph((0~+>1)('a'), (0~+>3)('d'),
-    (1~+>2)('b'), (3~+>2)('a'),
-    (2~+>4)('d'),(4~+>2)('d'),
-    (2~+>3)('b'))
+  val g = Graph((0~+#>1)('a'), (0~+#>3)('d'),
+    (0~+#>2)('a'),
+    (1~+#>2)('b'), (3~+#>2)('a'),
+    (2~+#>4)('d'),(4~+#>2)('d'),
+    (2~+#>3)('b'), (3~+#>0)('d'))
   def main(args: Array[String]): Unit = {
-      getResult(S, g, "myGraph2")
+      getResult(S, IGraph(g), "myGraph2")
   }
 
 }

@@ -28,6 +28,7 @@
 package org.meerkat.sppf
 
 import scala.collection.mutable._
+import scala.collection.immutable.Set
 import java.util.HashMap
 import scala.collection.JavaConversions._
 import org.meerkat.util.IntKey3
@@ -77,6 +78,27 @@ class DefaultSPPFLookup(input: Input) extends SPPFLookup {
     }
     return None
   }
+  def getStartNodesFilterByStarts(name: Any, starts: Set[Int]): Option[List[NonPackedNode]] =
+    nonterminalNodes.toList.map{case (key,value) => value}
+      .filter((node) => node.name.equals(name)&&starts.contains(node.leftExtent)) match {
+      case Nil => None
+      case roots => Some(roots)
+    }
+  def getStartNodesFilterByEnds(name: Any, ends: Set[Int]): Option[List[NonPackedNode]] =
+    nonterminalNodes.toList.map{case (key,value) => value}
+      .filter((node) => node.name.equals(name)&&ends.contains(node.rightExtent)) match {
+      case Nil => None
+      case roots => Some(roots)
+    }
+  def getStartNodesFilterByStartAndEnds(name: Any, starts:Set[Int], ends: Set[Int]): Option[List[NonPackedNode]] =
+    nonterminalNodes.toList.map{case (key,value) => value}
+      .filter((node) => node.name.equals(name)
+        &&starts.contains(node.leftExtent)
+        &&ends.contains(node.rightExtent)) match {
+      case Nil => None
+      case roots => Some(roots)
+    }
+
   def getStartNodes(name: Any, leftExtent: Int, rightExtent: Int): Option[List[NonPackedNode]] = {
     def getListOfNode(name: Any, leftExtent: Int, rightExtent: Int): List[NonPackedNode] = {
       if (leftExtent >= rightExtent){

@@ -9,15 +9,17 @@ import scalax.collection.Graph
 import scalax.collection.edge.Implicits._
 
 /**
-  * Created by sofysmo on 27.11.16.
+  * Created by sofysmo on 06.12.16.
   */
-object ExampleGraph4 {
-  val E: Nonterminal = syn ( "(" ~~ E ~~ ")"
-    | epsilon)
-  val g = Graph((0~+#>1)("("),(1~+#>2)("("),
-    (2~+#>0)("("),(0~+#>3)(")"), (3~+#>0)(")"))
-
+object ExampleGraph11 {
+  val S: Nonterminal =
+    syn ( "a" ~~ S ~~ "b"
+      |"a" ~~  S
+      | "c"
+    )
+  val g = Graph((0~+#>1)("a"),(1~+#>2)("a"), (1~+#>2)("c"), (2~+#>3)("b"))
   def main(args: Array[String]): Unit = {
-    getResult(E, IGraph(g), "myGraph4")
+    getResult(S,IGraph(g),"myGraph5")
   }
 }
+

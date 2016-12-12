@@ -74,7 +74,7 @@ object Parsers { import AbstractCPSParsers._
     type Alternation = Parsers.Alternation
     def alternation(p: AbstractParser[NonPackedNode]): Alternation
     = new Alternation {
-      def apply(input: Input, i: Int, sppfLookup: SPPFLookup) ={ println("alternation p=$p i=$i");p(input, i, sppfLookup)}
+      def apply(input: Input, i: Int, sppfLookup: SPPFLookup) ={ println(s"alternation p=$p i=$i");p(input, i, sppfLookup)}
       def symbol = p.symbol.asInstanceOf[org.meerkat.tree.Alt]
       override def reset = p.reset
     }
@@ -228,6 +228,8 @@ object Parsers { import AbstractCPSParsers._
     }
   }
 
+
+
   trait Symbol[+V] extends AbstractParser[NonPackedNode] with SymbolOps[V] with EBNFs[V] with CharLevelDisambiguation[V] { import AbstractParser._
     def name: String
     def action: Option[Any => V] = None
@@ -252,6 +254,32 @@ object Parsers { import AbstractCPSParsers._
     }
   }
 
+
+
+  /*trait Symbol[+V] extends AbstractParser[NonPackedNode] with SymbolOps[V] with EBNFs[V] with CharLevelDisambiguation[V] { import AbstractParser._
+    def name: String
+    def action: Option[Any => V] = None
+
+    def ~ [U](p: Symbol[U])(implicit tuple: V|~|U, layout: Layout) = this ~~ layout.get ~~ p
+    def ~~ [U](p: Symbol[U])(implicit tuple: V|~|U) = seq(this, p)
+
+    def ~ (p: String)(implicit layout: Layout) = this ~~ layout.get ~~ p
+    def ~~ (p: String)(implicit tuple: V|~|NoValue) = seq(this, p)
+
+    def &[U](f: V => U) = new SymbolWithAction[U] {
+      def apply(input: Input, i: Int, sppfLookup: SPPFLookup) ={println(s"symbol with action input=$input i=$i sppfLookup"); Symbol.this(input, i, sppfLookup)}
+      def name = Symbol.this.name; def symbol = Symbol.this.symbol
+      def action = Option({ x => f(x.asInstanceOf[V]) })
+      override def reset = Symbol.this.reset
+    }
+    def ^[U](f: String => U)(implicit sub: V <:< NoValue) = new SymbolWithAction[U] {
+      def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = Symbol.this(input, i, sppfLookup)
+      def name = Symbol.this.name; def symbol = Symbol.this.symbol
+      def action = Option({ x => f(x.asInstanceOf[String]) })
+      override def reset = Symbol.this.reset
+    }
+  }*/
+
   trait SymbolWithAction[+V] extends AbstractParser[NonPackedNode] with SymbolOps[V] { import AbstractParser._
     def name: String
     def action: Option[Any => V]
@@ -269,11 +297,33 @@ object Parsers { import AbstractCPSParsers._
     def | [U >: V](q: SymbolWithAction[U]) = altSym(this, q)
   }
 
+  /*trait SymbolWithAction[+V] extends AbstractParser[NonPackedNode] with SymbolOps[V] { import AbstractParser._
+    def name: String
+    def action: Option[Any => V]
+  }
+
+  trait SymbolOps[+V] extends AbstractParser[NonPackedNode] { import AbstractParser._
+    def name: String
+    def action: Option[Any => V]
+
+    def | [U >: V](p: AlternationBuilder[U]) = altSymAlt(this, p)
+    def | [U >: V](p: SequenceBuilder[U]) = altSymSeq(this, p)
+    def | [U >: V](p: Symbol[U]) = altSym(this, p)
+
+    def | [U >: V](q: SequenceBuilderWithAction[U]) = altSymSeq(this, q)
+    def | [U >: V](q: SymbolWithAction[U]) = altSym(this, q)
+  }*/
+
   implicit def toTerminal(s: String): Terminal = new Terminal {
     def apply(input: Input, i: Int, sppfLookup: SPPFLookup)
     ={
       input.startsWith(s, i) match {
-        case Some(num) => { println(s"toTerminal getTerminalNode input=$input i=$i");CPSResult.success(sppfLookup.getTerminalNode(s, i, num))}
+        case Some(nums) => { println(s"toTerminal getTerminalNode input=$input i=$i")
+          val terminals = nums.map(num => sppfLookup.getTerminalNode(s, i, num))
+          //CPSResult.success(terminals)
+          //terminals.tail.map{res => Trampoline.call(this,res)}
+          CPSResult.success(sppfLookup.getTerminalNode(s, i, nums.head))
+        }
         case None => CPSResult.failure
       }
     }
@@ -307,7 +357,7 @@ object Parsers { import AbstractCPSParsers._
     def apply(input: Input, i: Int, sppfLookup: SPPFLookup)
     = {
       input.startsWith(s, i) match {
-        case Some(num) => { println(s"toTerminal getTerminalNode input=$input i=$i");CPSResult.success(sppfLookup.getTerminalNode(s, i, num))}
+        case Some(num) => { println(s"toTerminal getTerminalNode input=$input i=$i");CPSResult.success(sppfLookup.getTerminalNode(s, i, num.head))}
         case None => CPSResult.failure
       }
      // val t = input.startsWith(s, i)

@@ -3,6 +3,7 @@ package org.meerkat.parsers.examplesgraph
 import org.meerkat.Syntax._
 import org.meerkat.parsers.Parsers._
 import org.meerkat.parsers._
+import org.meerkat.util.IGraph
 
 import scalax.collection.Graph
 import scalax.collection.edge.Implicits._
@@ -18,10 +19,10 @@ object ExampleGraph3 {
 
   val Num = syn("1"|"0")
 
-  val g = Graph((0~+>1)("0"),(0~+>2)("+"),
-    (1~+>2)("*"),(2~+>0)("1"))
+  val g = Graph((0~+#>1)("0"),(0~+#>2)("+"),
+    (1~+#>2)("*"),(2~+#>0)("1"))
   def main(args: Array[String]): Unit = {
-    getResult(E,g,"myGraph3")
+    getResult(E,IGraph(g),"myGraph3")
   }
 
 }

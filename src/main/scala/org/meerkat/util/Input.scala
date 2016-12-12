@@ -30,13 +30,11 @@ package org.meerkat.util
 import scala.util.matching.Regex
 import scala.collection.mutable._
 import scala.collection.JavaConversions._
+import scala.collection.mutable
 import scalax.collection.Graph
-import scalax.collection.edge._
-import scalax.collection.immutable._
 import scalax.collection.GraphPredef.{EdgeLikeIn, Param}
 import scalax.collection.edge.LDiEdge
-import scala.util.control.Breaks._
-//мой код
+
 trait Input{
   def length: Int
   val lineColumns:Array[(Int, Int)]
@@ -44,7 +42,7 @@ trait Input{
   def calcLineColumns: Unit
   def charAt(i: Int): scala.Char
   def substring(start: Int, end: Int): String
-  def startsWith(prefix: String, toffset: Int): Option[Int]//Boolean
+  def startsWith(prefix: String, toffset: Int): Option[Set[Int]]//Boolean
   def endsWith(suffix: String): Boolean
   def matchRegex(r: Regex, start: Int, end: Int): Boolean
   def matchRegex(r: Regex, start: Int): Int
@@ -52,8 +50,7 @@ trait Input{
   def columnNumber(i: Int): Int
   def lineColumn(i: Int): (Int, Int)
 }
-//мой код
-class InputString(val s: String) extends Input{ //DefaultGraphImpl[N,E[X] <: EdgeLikeIn[X]]) {
+class InputString(val s: String) extends Input{
 
   def length = {
     var l = s.length()
@@ -101,12 +98,12 @@ class InputString(val s: String) extends Input{ //DefaultGraphImpl[N,E[X] <: Edg
     c
   }
 
-  def startsWith(prefix: String, toffset: Int):Option[Int] =
+  def startsWith(prefix: String, toffset: Int):Option[Set[Int]] =
   {
     val w = s.startsWith(prefix, toffset)
     println(s"StartWith prefix=$prefix toOffset=$toffset return=$w")
     if(w)
-      Some(toffset+prefix.length)
+      Some(Set(toffset+prefix.length))
     else None
   }
 
@@ -137,11 +134,83 @@ class InputString(val s: String) extends Input{ //DefaultGraphImpl[N,E[X] <: Edg
   def lineColumn(i: Int): (Int, Int) = lineColumns(i)
 
 }
-//[Int, DiEdge[Int]]
-//class InputGraph[N, E[X] <: EdgeLikeIn[X]](graph: Graph[N,E]) extends Input{
-class InputGraph(g: Graph[Int,LDiEdge]) extends Input{
+
+class InputGraph(g: IGraph) extends Input{
+  private def n(outer: Int): INode = g get outer
+  def length: Int = g.countNodes
+  val lineColumns:Array[(Int, Int)] = Array.ofDim[(Int, Int)](length + 1)
+  val regexMap: Map[Regex, java.util.regex.Matcher] = new java.util.HashMap[Regex, java.util.regex.Matcher]()
+  calcLineColumns
+  def calcLineColumns: Unit ={
+    var lineCount = 0
+    var lineNumber = 1
+    var columnNumber = 1
+
+    // Empty input: only the end of line symbol
+    /*if(length == 1) {
+      lineColumns(0) = (lineNumber, columnNumber)
+    } else {
+      for (i <- 0 until length) {
+        lineColumns(i) = (lineNumber, columnNumber)
+        if (charAt(i) == '\n') {
+          lineCount += 1
+          lineNumber += 1
+          columnNumber = 1
+        } else if (charAt(i) == '\r') {
+          columnNumber = 1
+        } else {
+          columnNumber += 1
+        }
+      }
+    }
+    lineColumns(length) = (lineNumber, columnNumber)*/
+  }
+  def charAt(i: Int): scala.Char = {
+    val f = n(i).getOutgoingEdges.head.getLabel.charAt(0)//.edges.head.label.toString().charAt(0)
+    f
+  }
+  def substring(start: Int, end: Int): String = {
+    println("substring")
+    /*if(n(end) isPredecessorOf n(start)){
+      val some = n(start) pathTo n(end)
+      val path = some.get
+      val res = path.edges.flatMap { x => x.label.toString() }
+      println(res.mkString)
+      return res.mkString
+    }*/
+    return ""
+  }
+
+  def startsWith(prefix: String, toffset: Int): Option[Set[Int]] = {
+    var i = n(toffset)
+    val res = mutable.Set[Int]()
+    val edges = i.getOutgoingEdges.filter(x =>{
+        x.getLabel.equals(prefix.charAt(0).toString)});
+    if (edges.nonEmpty) {
+      if(prefix.length == 1)
+        for(edge <- edges) res += edge.getToNode.value
+      else for(edge <- edges)
+        startsWith(prefix.substring(1),edge.getToNode.value) match {
+          case Some(s) => res ++= s
+          case None =>
+        }
+      Some(res)
+    }
+    else None
+  }
+  def endsWith(suffix: String): Boolean = {
+    val res = n(this.length-1).getIncomingEdges.filter { x => x.getLabel.toString() == suffix }
+    res.size > 0
+  }
+  def matchRegex(r: Regex, start: Int, end: Int): Boolean = true
+  def matchRegex(r: Regex, start: Int): Int = -1
+  def lineNumber(i: Int): Int = lineColumns(i)._1
+  def columnNumber(i: Int): Int = lineColumns(i)._2
+  def lineColumn(i: Int): (Int, Int) = lineColumns(i)
+}
+/*class InputGraph(g: Graph[Int,LDiEdge]) extends Input{
   private def n(outer: Int): g.NodeT = g get outer
-  def length: Int = g.order//graphSize//g.order//graph.count(x => true)
+  def length: Int = g.order
   val lineColumns:Array[(Int, Int)] = Array.ofDim[(Int, Int)](length + 1)
   val regexMap: Map[Regex, java.util.regex.Matcher] = new java.util.HashMap[Regex, java.util.regex.Matcher]()
   calcLineColumns
@@ -171,7 +240,6 @@ class InputGraph(g: Graph[Int,LDiEdge]) extends Input{
   }
   def charAt(i: Int): scala.Char = {
     val f = n(i).edges.head.label.toString().charAt(0)
-    println(f)
     f
   }
   def substring(start: Int, end: Int): String = {
@@ -186,10 +254,19 @@ class InputGraph(g: Graph[Int,LDiEdge]) extends Input{
     return ""
   }
 
-  def startsWith(prefix: String, toffset: Int): Option[Int] = {//: Boolean = {
+  def startsWith(prefix: String, toffset: Int): Option[Set[Int]] = {
     var i = n(toffset)
-    var b = false
-    breakable {for(s <-prefix.toCharArray)
+    //var b = false
+    //for(s <- prefix.toCharArray){
+      val res = i.outgoing.filter(x => x.label.toString().equals(prefix.charAt(0)));
+      if (res.size > 0) {
+
+        i = res.head.nodes.last
+        if(prefix.last == s) b = true
+      }
+      else None
+    //}
+   /* breakable {for(s <-prefix.toCharArray)
     {
       val res = i.outgoing.filter(x => x.label.toString().equals(s.toString));
       if (res.size > 0) {
@@ -200,7 +277,7 @@ class InputGraph(g: Graph[Int,LDiEdge]) extends Input{
         i = n(toffset)
         break
       }
-    }}
+    }}*/
 
     if(b)
       Some(i.value)
@@ -218,13 +295,14 @@ class InputGraph(g: Graph[Int,LDiEdge]) extends Input{
   def lineNumber(i: Int): Int = lineColumns(i)._1
   def columnNumber(i: Int): Int = lineColumns(i)._2
   def lineColumn(i: Int): (Int, Int) = lineColumns(i)
-}
+}*/
 
 object Input {
 
   def apply(s:String) = new InputString(s)
-  def apply(s: Graph[Int,LDiEdge]) = new InputGraph(s)
-
-  implicit def toInput(s: Graph[Int,LDiEdge]) = Input(s)
+  def apply(s: IGraph) = new InputGraph(s)
+  //def apply(s: Graph[Int,LDiEdge]) = new InputGraph(s)
+  implicit def toInput(s: IGraph) = Input(s)
+  //implicit def toInput(s: Graph[Int,LDiEdge]) = Input(s)
   implicit def toInput(s: String) = Input(s)
 }

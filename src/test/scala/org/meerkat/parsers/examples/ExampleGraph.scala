@@ -30,13 +30,16 @@ package org.meerkat.parsers.examples
 import org.meerkat.Syntax._
 import org.meerkat.parsers._
 import org.meerkat.util.InputGraph
+import org.meerkat.util.IGraph
 import Parsers._
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.FunSuite
+
 import scalax.collection.Graph
-import scalax.collection.GraphPredef._, scalax.collection.GraphEdge._
-import scalax.collection.edge.LDiEdge
+import scalax.collection.GraphPredef._
+import scalax.collection.GraphEdge._
+import scalax.collection.edge.{LDiEdge, LkDiEdge}
 
 
 @RunWith(classOf[JUnitRunner])
@@ -54,8 +57,8 @@ class ExampleGraph extends FunSuite {
       
   
   test("test") {
-    val g = Graph(LDiEdge(0,1)('a'), LDiEdge(1,2)('b'))
-    val result = exec(S, new InputGraph(g))
+    val g = Graph(LkDiEdge(0,1)('a'), LkDiEdge(1,2)('b'))
+    val result = exec(S, new InputGraph(IGraph(g)))
         
     assert(result.isSuccess)
 
