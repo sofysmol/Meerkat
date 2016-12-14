@@ -321,7 +321,7 @@ object Parsers { import AbstractCPSParsers._
         case Some(nums) => { println(s"toTerminal getTerminalNode input=$input i=$i")
           val terminals = nums.map(num => sppfLookup.getTerminalNode(s, i, num))
           //CPSResult.success(terminals)
-          //terminals.tail.map{res => Trampoline.call(this,res)}
+         // terminals.tail.map{res => Trampoline.call(this,res)}
           CPSResult.success(sppfLookup.getTerminalNode(s, i, nums.head))
         }
         case None => CPSResult.failure
