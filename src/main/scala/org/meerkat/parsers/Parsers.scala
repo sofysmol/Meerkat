@@ -170,7 +170,9 @@ object Parsers { import AbstractCPSParsers._
 
     def & [U](f: V => U) = new SequenceBuilderWithAction[U] {
       def apply(slot: Slot) = SequenceBuilder.this(slot)
-      def action = Option({ x => f(x.asInstanceOf[V]) })
+      def action = /*Option ({ x => x match
+                            {case g: Set[V] => g.map(i => f(i))
+                              case _=> f(x.asInstanceOf[V])}})*/Option ({ x => f(x.asInstanceOf[V]) })
     }
 
     def ^[U](f: String => U)(implicit sub: V <:< NoValue) = new SequenceBuilderWithAction[U] {
@@ -324,8 +326,11 @@ object Parsers { import AbstractCPSParsers._
 
   implicit def toTerminal(r: Regex) = new Terminal {
     def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = {
-      val end = input.matchRegex(r, i)
-      if(end != -1) CPSResult.success(sppfLookup.getTerminalNode(r.toString, i, end))
+      val ends = input.matchRegex(r, i)
+      if(ends.nonEmpty) {
+        val terminals = ends.map(end => CPSResult.success(sppfLookup.getTerminalNode(r.toString, i, end)))
+        terminals.reduceLeft(_.orElse(_))
+      }
       else CPSResult.failure
     }
     def name = r.toString; def symbol = TerminalSymbol(name)
@@ -358,8 +363,11 @@ object Parsers { import AbstractCPSParsers._
   implicit def toLayout(r: Regex): Layout
   = layout(new Terminal {
     def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = {
-      val end = input.matchRegex(r, i)
-      if(end != -1) CPSResult.success(sppfLookup.getLayoutTerminalNode(r.toString, i, end))
+      val ends = input.matchRegex(r, i)
+      if(ends.nonEmpty) {
+        val terminals = ends.map(end => CPSResult.success(sppfLookup.getTerminalNode(r.toString, i, end)))
+        terminals.reduceLeft(_.orElse(_))
+      }
       else CPSResult.failure
     }
     def name = r.toString; def symbol = TerminalSymbol(name)

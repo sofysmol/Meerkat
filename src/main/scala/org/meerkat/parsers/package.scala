@@ -276,6 +276,16 @@ package object parsers {
     }
   }
 
+  def execGraph[T,V](parser: AbstractCPSParsers.AbstractSymbol[T,V], input: Input): ParseResult[ParseError, ParseSemanticSuccess[V]] = {
+    getSPPFs(parser, input) match {
+      case Left(error) => Left(error)
+      case Right((roots, parseTimeStat, sppfStat)) => {
+        val x = roots.map( root => SemanticAction.execute(root)(input).asInstanceOf[V])
+        Right(ParseSemanticSuccess(x, parseTimeStat, sppfStat))
+      }
+    }
+  }
+
   type ParseResult[A, B] = Either[A, B]
 
   implicit class ParseResultOps[A, B](result: ParseResult[A, B]) {

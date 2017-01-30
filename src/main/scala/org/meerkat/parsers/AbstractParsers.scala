@@ -383,7 +383,6 @@ object AbstractCPSParsers extends AbstractParsers {  import AbstractParser._
     var results: Array[Result[A]] = null
     new AbstractParser[A] {
       def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = {
-        println("gg")
         if (results == null) results = new Array(input.length + 1)
         val result = results(i)
         if (result == null) { results(i) = memo(q(input,i,sppfLookup)); results(i) } 

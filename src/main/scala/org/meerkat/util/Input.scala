@@ -29,6 +29,7 @@ package org.meerkat.util
 
 import scala.util.matching.Regex
 import scala.collection.mutable._
+import scala.collection.immutable.Set
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scalax.collection.Graph
@@ -45,7 +46,7 @@ trait Input{
   def startsWith(prefix: String, toffset: Int): Option[Set[Int]]//Boolean
   def endsWith(suffix: String): Boolean
   def matchRegex(r: Regex, start: Int, end: Int): Boolean
-  def matchRegex(r: Regex, start: Int): Int
+  def matchRegex(r: Regex, start: Int): Set[Int]
   def lineNumber(i: Int): Int
   def columnNumber(i: Int): Int
   def lineColumn(i: Int): (Int, Int)
@@ -101,7 +102,6 @@ class InputString(val s: String) extends Input{
   def startsWith(prefix: String, toffset: Int):Option[Set[Int]] =
   {
     val w = s.startsWith(prefix, toffset)
-    println(s"StartWith prefix=$prefix toOffset=$toffset return=$w")
     if(w)
       Some(Set(toffset+prefix.length))
     else None
@@ -109,7 +109,6 @@ class InputString(val s: String) extends Input{
 
   def endsWith(suffix: String) = {
     val w = s.endsWith(suffix)
-    println(s"EndWith suffix=$suffix return=$w")
     w
   }
 
@@ -120,11 +119,11 @@ class InputString(val s: String) extends Input{
     return matcher.matches()
   }
 
-  def matchRegex(r: Regex, start: Int): Int = {
-    if(start < 0) return -1
+  def matchRegex(r: Regex, start: Int): Set[Int] = {
+    if(start < 0) return Set()//-1
     val matcher = regexMap.getOrElse(r, {val matcher: java.util.regex.Matcher = r.pattern.matcher(s); matcher})
     matcher.region(start, length)
-    if (matcher.lookingAt()) matcher.end else -1
+    if (matcher.lookingAt()) Set(matcher.end) else Set()//-1
   }
 
   def lineNumber(i: Int): Int  = lineColumns(i)._1
@@ -170,15 +169,9 @@ class InputGraph(g: IGraph) extends Input{
     f
   }
   def substring(start: Int, end: Int): String = {
-    println("substring")
-    /*if(n(end) isPredecessorOf n(start)){
-      val some = n(start) pathTo n(end)
-      val path = some.get
-      val res = path.edges.flatMap { x => x.label.toString() }
-      println(res.mkString)
-      return res.mkString
-    }*/
-    return ""
+    val edges = n(start).getOutgoingEdges.filter(e => e.getToNode.value == end)
+    if(edges.nonEmpty) {println(edges.head.getLabel); edges.head.getLabel}
+    else {println("substring"); ""}
   }
 
   def startsWith(prefix: String, toffset: Int): Option[Set[Int]] = {
@@ -194,7 +187,7 @@ class InputGraph(g: IGraph) extends Input{
           case Some(s) => res ++= s
           case None =>
         }
-      Some(res)
+      Some(res.toSet)
     }
     else None
   }
@@ -202,8 +195,20 @@ class InputGraph(g: IGraph) extends Input{
     val res = n(this.length-1).getIncomingEdges.filter { x => x.getLabel.toString() == suffix }
     res.size > 0
   }
-  def matchRegex(r: Regex, start: Int, end: Int): Boolean = true
-  def matchRegex(r: Regex, start: Int): Int = -1
+  def matchRegex(r: Regex, start: Int, end: Int): Boolean = { true
+    if(start < 0) return false
+    n(start).getOutgoingEdges.filter(s => s.getToNode.value == end).exists(s => {
+    val matcher = regexMap.getOrElse(r, {val matcher: java.util.regex.Matcher = r.pattern.matcher(s.getLabel); matcher})
+    matcher.region(0, s.getLabel.length)
+    matcher.matches()})
+  }
+  def matchRegex(r: Regex, start: Int): Set[Int] = {
+    if(start < 0) return collection.immutable.Set[Int]()
+    n(start).getOutgoingEdges.filter(s => {
+      val matcher = regexMap.getOrElse(r, {val matcher: java.util.regex.Matcher = r.pattern.matcher(s.getLabel); matcher})
+      matcher.region(0, s.getLabel.length)
+      matcher.matches()}).map(e => e.getToNode.value)
+  }
   def lineNumber(i: Int): Int = lineColumns(i)._1
   def columnNumber(i: Int): Int = lineColumns(i)._2
   def lineColumn(i: Int): (Int, Int) = lineColumns(i)

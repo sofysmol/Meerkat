@@ -70,8 +70,10 @@ class SemanticActionExecutor(amb: (Set[Any], Int, Int) => Any,
  
    type T = Any
   
-   def ambiguity(n: NonPackedNode): Any =  
-     amb((for (p <- n.children) yield nonterminal(p, n.leftExtent, n.rightExtent)) (breakOut), n.leftExtent, n.rightExtent)
+   /*def ambiguity(n: NonPackedNode): Any =
+     amb((for (p <- n.children) yield nonterminal(p, n.leftExtent, n.rightExtent)) (breakOut), n.leftExtent, n.rightExtent)*/
+   def ambiguity(n: NonPackedNode): Any =
+   amb((for (p <- n.children) yield nonterminal(p, n.leftExtent, n.rightExtent)) (breakOut), n.leftExtent, n.rightExtent)
    
    def flatten(p: PackedNode, v: Any, leftExtent: Int, rightExtent: Int) = 
      p.ruleType.head match {

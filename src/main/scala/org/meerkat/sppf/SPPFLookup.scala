@@ -69,11 +69,11 @@ class DefaultSPPFLookup(input: Input) extends SPPFLookup {
   var countAmbiguousNodes: Int = 0
 
   override def getStartNode(name: Any, leftExtent: Int, rightExtent: Int): Option[NonPackedNode] = {
-    for(i <- 0 to rightExtent) {
+    //for(i <- 0 to rightExtent) {
       nonterminalNodes.get(IntKey3(name.hashCode(), leftExtent, rightExtent, hash)) match {
         case None => {}
         case Some(root) => {return Some(root)}
-      }
+      //}
 
     }
     return None
