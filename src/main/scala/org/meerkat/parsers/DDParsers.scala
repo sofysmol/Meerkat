@@ -200,7 +200,26 @@ object DDParsers { import AbstractCPSParsers._
     type SequenceBuilder = DDParsers.SequenceBuilder[B,Val]
     def builderSeq(f: Slot => Sequence) = new DDParsers.SequenceBuilder[B,Val] { def apply(slot: Slot) = f(slot) }
   }
-  
+
+  implicit def obj10[A,ValA] = new CanBuildNegative[(NonPackedNode,A),ValA] {
+    implicit val m = obj4[A]
+    type Nonterminal = DDParsers.AbstractNonterminal[A,ValA]
+    def not(nt: String, p: AbstractParser[(NonPackedNode,A)]): Nonterminal
+    = new DDParsers.AbstractNonterminal[A,ValA] {
+      def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = p(input, -i, sppfLookup)
+      def symbol = org.meerkat.tree.SimpleNonterminal(nt)
+      def name = nt; override def toString = name
+      type Value = ValA
+      override def reset = p.reset
+    }
+    type Symbol = DDParsers.AbstractNonterminal[A,ValA]
+    def not(p: AbstractSymbol[(NonPackedNode,A),ValA]) = new DDParsers.AbstractNonterminal[A,ValA] {
+      def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = p(input, -i,sppfLookup)
+      def name = p.name; def symbol = p.symbol.asInstanceOf[org.meerkat.tree.NonterminalSymbol]
+      override def reset = p.reset
+    }
+  }
+
   trait Sequence[+T] extends AbstractParser[(NonPackedNode,T)] with Slot { def size: Int; def symbol: org.meerkat.tree.Sequence }  
   trait Alternation[+T] extends AbstractParser[(NonPackedNode,T)] { def symbol: org.meerkat.tree.Alt }
   

@@ -1,8 +1,9 @@
 package org.meerkat.parsers.examplesgraph
 
 /**
-  * Created by sofysmo on 13.12.16.
+  * Created by sofysmo on 03.05.17.
   */
+
 import org.meerkat.Syntax._
 import org.meerkat.parsers.Parsers._
 import org.meerkat.util.IGraph
@@ -11,12 +12,11 @@ import org.meerkat.parsers._
 import scalax.collection.Graph
 import scalax.collection.edge.Implicits._
 
-object ExampleGraph19 {
-  val E = syn ( "a" ~~ "c"
-    | "b" ~~ "c")
+object ExampleGraph22NegativeSym {
+  val E = syn{ not{"a"} ~~ not{"b"}}
 
-  val g = Graph((0~+#>1)("a"),(0~+#>1)("b"),(1~+#>2)("c"))
+  val g = Graph((2~+#>1)("a"),(2~+#>1)("b"),(1~+#>0)("a"))
   def main(args: Array[String]): Unit = {
-    getResult(E,IGraph(g), "myGraph19")
+    getResult(E,IGraph(g), "myGraph22")
   }
 }

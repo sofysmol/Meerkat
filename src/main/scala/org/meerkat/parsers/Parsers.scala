@@ -27,6 +27,7 @@
 
 package org.meerkat.parsers
 
+import org.meerkat.parsers.AbstractCPSParsers.negativeSym
 import org.meerkat.sppf.NonPackedNode
 import org.meerkat.util.Input
 import org.meerkat.sppf.SPPFLookup
@@ -138,6 +139,26 @@ object Parsers { import AbstractCPSParsers._
       def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = p(input, i, sppfLookup)
       def symbol = org.meerkat.tree.Layout(nt)
       def name = nt; override def toString = name
+      override def reset = p.reset
+    }
+  }
+
+  implicit def obj8[Val] = new CanBuildNegative[NonPackedNode,Val] {
+    implicit val m = obj4
+
+    type Nonterminal = Parsers.AbstractNonterminal[Val]
+    def not(nt: String, p: AbstractParser[NonPackedNode])
+    = new Parsers.AbstractNonterminal[Val] {
+      def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = p(input, if(i == 0) Int.MinValue else -i, sppfLookup)
+      def symbol = org.meerkat.tree.SimpleNonterminal(nt)
+      def name = "-" + nt; override def toString = name
+      override def reset = p.reset
+    }
+
+    type Symbol = Parsers.Symbol[Val]
+    def not(p: AbstractSymbol[NonPackedNode,Val]) = new Parsers.Symbol[Val] {
+      def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = p(input,if(i == 0) Int.MinValue else -i,sppfLookup)
+      def name = "-" + p.name; def symbol = p.symbol
       override def reset = p.reset
     }
   }
@@ -376,6 +397,8 @@ object Parsers { import AbstractCPSParsers._
   def ntAlt[Val](name: String, p: => AlternationBuilder[Val]) = nonterminalAlt(name, p)
   def ntSeq[Val](name: String, p: => SequenceBuilder[Val]) = nonterminalSeq(name, p)
   def ntSym[Val](name: String, p: => AbstractSymbol[NonPackedNode,Val]) = nonterminalSym(name, p)
+
+  def notSym[Val](name: String, p: => AbstractSymbol[NonPackedNode,Val]) = negativeSym(name, p)
 
   def ltAlt[Val <: NoValue](name: String, p: => AlternationBuilder[Val]): Layout = layout(layoutAlt(name, p))
   def ltSeq[Val <: NoValue](name: String, p: => SequenceBuilder[Val]): Layout = layout(layoutSeq(name, p))

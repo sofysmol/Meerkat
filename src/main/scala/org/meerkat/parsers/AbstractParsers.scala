@@ -29,10 +29,13 @@ package org.meerkat.parsers
 
 import org.meerkat.sppf.SPPFLookup
 import org.meerkat.util.Input
+
 import scala.reflect.ClassTag
 import org.meerkat.sppf.Slot
 import org.meerkat.tree.NonterminalSymbol
 import org.meerkat.tree.TerminalSymbol
+
+import scala.collection.mutable
 
 
 trait MonadPlus[+T, M[+F] <: MonadPlus[F,M]] {
@@ -115,7 +118,16 @@ trait AbstractParsers {
     type Nonterminal <: AbstractNonterminal[A,ValA]
     def layout(name: String, p: AbstractParser[A]): Nonterminal
   }
-  
+
+  trait CanBuildNegative[A,ValA] {
+    implicit val m: Memoizable[A]
+    type Symbol <: AbstractSymbol[A,ValA]
+    type Nonterminal <: AbstractNonterminal[A,ValA]
+
+    def not(name: String, p: AbstractParser[A]): Nonterminal
+    def not(p: AbstractSymbol[A,ValA]): Symbol
+  }
+
   trait CanBuildEBNF[A,ValA] {
     implicit val m: Memoizable[A]
     
@@ -303,6 +315,11 @@ object AbstractCPSParsers extends AbstractParsers {  import AbstractParser._
 
   type Result[+T] = CPSResult[T]
 
+  def negativeSym[A,ValA](name: String, p: => AbstractSymbol[A,ValA])(implicit builder: CanBuildNegative[A,ValA],  obj: ClassTag[Result[A]]): builder.Nonterminal = {
+    import builder._
+    lazy val q: Nonterminal = not (name, p); q
+  }
+
   def nonterminalSym[A,ValA](name: String, p: => AbstractSymbol[A,ValA])(implicit builder: CanBuildNonterminal[A,ValA], b: CanBuildAlternative[A], obj: ClassTag[Result[A]]): builder.Nonterminal = { 
     import builder._
     lazy val q: Nonterminal = nonterminal (name, memoize(alt(q,p))); q
@@ -377,21 +394,24 @@ object AbstractCPSParsers extends AbstractParsers {  import AbstractParser._
   }
   
   import CPSResult.memo
-  
+
   protected def memoize[A: Memoizable](p: => AbstractParser[A])(implicit obj: ClassTag[Result[A]]): AbstractParser[A] = {
     lazy val q: AbstractParser[A] = p
-    var results: Array[Result[A]] = null
+    val results = new mutable.HashMap[Int, Result[A]]()
     new AbstractParser[A] {
       def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = {
-        if (results == null) results = new Array(input.length + 1)
-        val result = results(i)
-        if (result == null) { results(i) = memo(q(input,i,sppfLookup)); results(i) } 
-        else result
-      }   
+        results.get(i) match {
+          case Some(res) => res
+          case _ =>
+            val res = memo(q(input,i,sppfLookup))
+            results += (i -> res)
+            res
+        }
+      }
       def symbol = q.symbol
-      override def reset = { 
-        val done = results == null
-        if (!done) { results = null; q.reset }
+      override def reset = {
+        val done = results.isEmpty
+        if (!done) { results.clear(); q.reset }
       }
     }
   }

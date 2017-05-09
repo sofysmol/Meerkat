@@ -37,7 +37,6 @@ import org.meerkat.util.IntKey3
 
 trait SPPFLookup {
   def getStartNode(name: Any, leftExtent: Int, rightExtent: Int): Option[NonPackedNode]
-  def getTerminalNode(s: String, inputIndex: Int): TerminalNode
   def getTerminalNode(s: String, leftExtent: Int, rightExtent: Int): TerminalNode
   def getLayoutTerminalNode(s: String, leftExtent: Int, rightExtent: Int): LayoutTerminalNode
   def getEpsilonNode(inputIndex: Int): TerminalNode
@@ -120,13 +119,16 @@ class DefaultSPPFLookup(input: Input) extends SPPFLookup {
     }
   }
 
-  def getTerminalNode(s: String, inputIndex: Int): TerminalNode = findOrElseCreateTerminalNode(s, inputIndex, inputIndex + 1)
-  
-  def getTerminalNode(s: String, leftExtent: Int, rightExtent: Int): TerminalNode = findOrElseCreateTerminalNode(s, leftExtent, rightExtent)
-  
-  def getLayoutTerminalNode(s: String, leftExtent: Int, rightExtent: Int): LayoutTerminalNode = findOrElseCreateLayoutTerminalNode(s, leftExtent, rightExtent)
-  
-  def getEpsilonNode(inputIndex: Int): TerminalNode = findOrElseCreateTerminalNode("epsilon", inputIndex, inputIndex)
+  def getTerminalNode(s: String, leftExtent: Int, rightExtent: Int): TerminalNode =
+    findOrElseCreateTerminalNode(s, index(leftExtent), index(rightExtent))
+
+  def getLayoutTerminalNode(s: String, leftExtent: Int, rightExtent: Int): LayoutTerminalNode =
+    findOrElseCreateLayoutTerminalNode(s, index(leftExtent), index(rightExtent))
+
+  def getEpsilonNode(inputIndex: Int): TerminalNode = {
+    val i = index(inputIndex)
+    findOrElseCreateTerminalNode("epsilon", i, i)
+  }
     
   def getNonterminalNode(head: Any, slot: Slot, leftChild: Option[NonPackedNode], rightChild: NonPackedNode): NonPackedNode = {
     
@@ -190,5 +192,8 @@ class DefaultSPPFLookup(input: Input) extends SPPFLookup {
     val key = IntKey3(slot.hashCode(), leftExtent, rightExtent, hash)
     return intermediateNodes.getOrElseUpdate(key, {countIntermediateNodes +=1; IntermediateNode(slot, leftExtent, rightExtent)});
   }
-  
+  private def index(i: Int): Int = i match {
+    case Int.MinValue => 0
+    case _ => Math.abs(i)
+  }
 }
