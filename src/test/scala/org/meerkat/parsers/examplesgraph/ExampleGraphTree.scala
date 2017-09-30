@@ -28,3 +28,9 @@ object ExampleGraphTree {
   }
 
 }
+/*
+val E = syn ( "EATS" )
+    val graph = new Neo4jGraph("http://localhost:7474","neo4j","karamell111")
+    getResult(E,Input(graph, 1), "neo4j_1")
+    http://localhost:7474/db/data/node/1/relationships/out
+ */

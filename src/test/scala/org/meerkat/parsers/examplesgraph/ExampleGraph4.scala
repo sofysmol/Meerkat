@@ -12,7 +12,8 @@ import scalax.collection.edge.Implicits._
   * Created by sofysmo on 27.11.16.
   */
 object ExampleGraph4 {
-  val E: Nonterminal = syn ( "(" ~~ E ~~ ")"
+  val E: Nonterminal = syn ( E ~~ E
+    |"(" ~~ E ~~ ")"
     | epsilon)
   val g = Graph((0~+#>1)("("),(1~+#>2)("("),
     (2~+#>0)("("),(0~+#>3)(")"), (3~+#>0)(")"))

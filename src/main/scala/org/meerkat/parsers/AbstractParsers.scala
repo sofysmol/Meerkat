@@ -29,10 +29,13 @@ package org.meerkat.parsers
 
 import org.meerkat.sppf.SPPFLookup
 import org.meerkat.util.Input
+
 import scala.reflect.ClassTag
 import org.meerkat.sppf.Slot
 import org.meerkat.tree.NonterminalSymbol
 import org.meerkat.tree.TerminalSymbol
+
+import scala.collection.mutable
 
 
 trait MonadPlus[+T, M[+F] <: MonadPlus[F,M]] {
@@ -108,6 +111,15 @@ trait AbstractParsers {
     
     type Symbol <: AbstractSymbol[A,ValA]
     def symbol(p: AbstractSymbol[A,ValA]): Symbol
+  }
+
+  trait CanBuildNegative[A,ValA] {
+    implicit val m: Memoizable[A]
+    type Symbol <: AbstractSymbol[A,ValA]
+    type Nonterminal <: AbstractNonterminal[A,ValA]
+
+    def not(name: String, p: AbstractParser[A]): Nonterminal
+    def not(p: AbstractSymbol[A,ValA]): Symbol
   }
   
   trait CanBuildLayout[A,ValA <: NoValue] {
@@ -212,7 +224,7 @@ trait AbstractParsers {
       import builder._
       builderAlt { head => this.alternation(alt(head, p1), alt(head, p2)) }
     }
-    
+
     def alt[B,Val](head: Head, p: AbstractSequenceBuilder[B,Val])(implicit builder: CanBuildAlternative[B]) = { import builder._
       new AbstractParser[B] with Slot { 
           val q = p(this)
@@ -303,6 +315,21 @@ object AbstractCPSParsers extends AbstractParsers {  import AbstractParser._
 
   type Result[+T] = CPSResult[T]
 
+  def negativeSym[A,ValA](name: String, p: => AbstractSymbol[A,ValA])(implicit builder: CanBuildNegative[A,ValA],  obj: ClassTag[Result[A]]): builder.Nonterminal = {
+    import builder._
+    lazy val q: Nonterminal = not (name, p); q
+  }
+
+  def negativeSeq[A,ValA](name: String, p: => AbstractSequenceBuilder[A,ValA])(implicit builder: CanBuildNegative[A,ValA], b: CanBuildAlternative[A], obj: ClassTag[Result[A]]): builder.Nonterminal = {
+    import builder._
+    lazy val q: Nonterminal = not (name, memoize(alt(q,p))); q
+  }
+
+  def negativeAlt[A,ValA](name: String, p: => AbstractAlternationBuilder[A,ValA])(implicit builder: CanBuildNegative[A,ValA], obj: ClassTag[Result[A]]): builder.Nonterminal = {
+    import builder._
+    lazy val q: Nonterminal = builder not (name, memoize(p(q))); q
+  }
+
   def nonterminalSym[A,ValA](name: String, p: => AbstractSymbol[A,ValA])(implicit builder: CanBuildNonterminal[A,ValA], b: CanBuildAlternative[A], obj: ClassTag[Result[A]]): builder.Nonterminal = { 
     import builder._
     lazy val q: Nonterminal = nonterminal (name, memoize(alt(q,p))); q
@@ -380,18 +407,21 @@ object AbstractCPSParsers extends AbstractParsers {  import AbstractParser._
   
   protected def memoize[A: Memoizable](p: => AbstractParser[A])(implicit obj: ClassTag[Result[A]]): AbstractParser[A] = {
     lazy val q: AbstractParser[A] = p
-    var results: Array[Result[A]] = null
+    val results = new mutable.HashMap[Int, Result[A]]()
     new AbstractParser[A] {
       def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = {
-        if (results == null) results = new Array(input.length + 1)
-        val result = results(i)
-        if (result == null) { results(i) = memo(q(input,i,sppfLookup)); results(i) } 
-        else result
+        results.get(i) match {
+          case Some(res) => res
+          case _ =>
+            val res = memo(q(input,i,sppfLookup))
+            results += (i -> res)
+            res
+        }
       }   
       def symbol = q.symbol
       override def reset = { 
-        val done = results == null
-        if (!done) { results = null; q.reset }
+        val done = results.isEmpty
+        if (!done) { results.clear(); q.reset }
       }
     }
   }

@@ -123,8 +123,8 @@ package object parsers {
     parser(input, start, sppf)(t => {})
     Trampoline.run
   }*/
-  def run[T](input: Input, sppfs: SPPFLookup, parser: AbstractCPSParsers.AbstractParser[T], start: Int = 0): Unit = {
-    parser(input, start, sppfs)(t => {})
+  def run[T](input: Input, sppfs: SPPFLookup, parser: AbstractCPSParsers.AbstractParser[T]): Unit = {
+    parser(input, input.start, sppfs)(t => {})
     Trampoline.run
   }
 
@@ -160,8 +160,8 @@ package object parsers {
       sppfLookup.countPackedNodes,
       sppfLookup.countAmbiguousNodes)
 
-    sppfLookup.getStartNodes(parser,0,input.length) match {
-      case None       => Left(ParseError(0, " "))
+    sppfLookup.getStartNodes(parser,input.start,input.length) match {
+      case None       => Left(ParseError(input.start, " "))
       case Some(roots) => Right((roots, parseTimeStatistics, sppftatistics))
     }
   }
@@ -294,5 +294,4 @@ package object parsers {
     def asSuccess = result.right.get
     def asFailure = result.left.get
   }
-
 }

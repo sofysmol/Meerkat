@@ -142,6 +142,26 @@ object Parsers { import AbstractCPSParsers._
     }
   }
 
+  implicit def obj8[Val] = new CanBuildNegative[NonPackedNode,Val] {
+    implicit val m = obj4
+
+    type Nonterminal = Parsers.AbstractNonterminal[Val]
+    def not(nt: String, p: AbstractParser[NonPackedNode])
+    = new Parsers.AbstractNonterminal[Val] {
+      def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = p(input, if(i == 0) Int.MinValue else -i, sppfLookup)
+      def symbol = org.meerkat.tree.SimpleNonterminal(nt)
+      def name = "-" + nt; override def toString = name
+      override def reset = p.reset
+    }
+
+    type Symbol = Parsers.Symbol[Val]
+    def not(p: AbstractSymbol[NonPackedNode,Val]) = new Parsers.Symbol[Val] {
+      def apply(input: Input, i: Int, sppfLookup: SPPFLookup) = p(input,if(i == 0) Int.MinValue else -i,sppfLookup)
+      def name = "-" + p.name; def symbol = p.symbol
+      override def reset = p.reset
+    }
+  }
+
   trait Sequence extends AbstractParser[NonPackedNode] with Slot { def size: Int; def symbol: org.meerkat.tree.Sequence }
   trait Alternation extends AbstractParser[NonPackedNode] { def symbol: org.meerkat.tree.Alt }
 
@@ -314,11 +334,11 @@ object Parsers { import AbstractCPSParsers._
     def apply(input: Input, i: Int, sppfLookup: SPPFLookup)
     = {
       input.startsWith(s, i) match {
-        case Some(nums) => {
-          val terminals = nums.map(num => CPSResult.success(sppfLookup.getTerminalNode(s, i, num)))
+        case Set.empty => CPSResult.failure
+        case nums =>
+          val terminals = nums.map(num =>
+            CPSResult.success(sppfLookup.getTerminalNode(s, i, num)))
           terminals.reduceLeft(_.orElse(_))
-        }
-        case None => CPSResult.failure
       }
     }
     def symbol = TerminalSymbol(s); def name = s; override def toString = name
@@ -350,11 +370,10 @@ object Parsers { import AbstractCPSParsers._
     def apply(input: Input, i: Int, sppfLookup: SPPFLookup)
     = {
       input.startsWith(s, i) match {
-        case Some(nums) => {
+        case Set.empty => CPSResult.failure
+        case nums =>
           val terminals = nums.map(num => CPSResult.success(sppfLookup.getTerminalNode(s, i, num)))
           terminals.reduceLeft(_.orElse(_))
-        }
-        case None => CPSResult.failure
       }
     }
     def symbol = org.meerkat.tree.TerminalSymbol(s); def name = s; override def toString = name
@@ -376,6 +395,11 @@ object Parsers { import AbstractCPSParsers._
   def ntAlt[Val](name: String, p: => AlternationBuilder[Val]) = nonterminalAlt(name, p)
   def ntSeq[Val](name: String, p: => SequenceBuilder[Val]) = nonterminalSeq(name, p)
   def ntSym[Val](name: String, p: => AbstractSymbol[NonPackedNode,Val]) = nonterminalSym(name, p)
+
+  def notAlt[Val](name: String, p: => AlternationBuilder[Val]) = negativeAlt(name, p)
+  def notSeq[Val](name: String, p: => SequenceBuilder[Val]) = negativeSeq(name, p)
+  def notSym[Val](name: String, p: => AbstractSymbol[NonPackedNode,Val]) = negativeSym(name, p)
+
 
   def ltAlt[Val <: NoValue](name: String, p: => AlternationBuilder[Val]): Layout = layout(layoutAlt(name, p))
   def ltSeq[Val <: NoValue](name: String, p: => SequenceBuilder[Val]): Layout = layout(layoutSeq(name, p))
