@@ -47,7 +47,7 @@ trait Input {
 
   def substring(start: Int, end: Int): String
 
-  def startsWith(prefix: String, toffset: Int): Option[Set[Int]]
+  def startsWith(prefix: String, toffset: Int): Set[Int]
 
   //Boolean
   def endsWith(suffix: String): Boolean
@@ -105,11 +105,11 @@ class InputString(val s: String) extends Input {
     c
   }
 
-  def startsWith(prefix: String, toffset: Int): Option[Set[Int]] = {
+  def startsWith(prefix: String, toffset: Int): Set[Int] = {
     val w = s.startsWith(prefix, toffset)
     if (w)
-      Some(Set(toffset + prefix.length))
-    else None
+      Set(toffset + prefix.length)
+    else Set.empty
   }
 
   def endsWith(suffix: String) = {
@@ -167,19 +167,19 @@ class InputGraph(g: IGraph, startParsing: Int = 0) extends Input {
     }
   }
 
-  def startsWith(prefix: String, toffset: Int): Option[Set[Int]] = {
+  def startsWith(prefix: String, toffset: Int): Set[Int] = {
     val v = if(toffset == Int.MinValue) 0 else Math.abs(toffset)
     var i = n(v)
     val res = mutable.Set[Int]()
-    val sourse = if(toffset > 0) i.getOutgoingEdges else i.getIncomingEdges
+    val sourse = if(toffset >= 0) i.getOutgoingEdges else i.getIncomingEdges
     val edges = sourse.filter(x => {
       x.getLabel.equals(prefix.toString)
     })
     if (edges.nonEmpty) {
       for (edge <- edges) res += (if(toffset < 0) edge.getFromNode.value else edge.getToNode.value)
-      Some(res.toSet)
+      res.toSet
     }
-    else None
+    else Set.empty
   }
 
   def endsWith(suffix: String): Boolean = {
